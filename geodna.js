@@ -1,4 +1,17 @@
 // ---------------------------------------------------
+// geodna.js - (C) KD 2012
+// ---------------------------------------------------
+// Converts between lat/lon and a "geodna" code,
+// which is a single string representing a point
+// on the earth's surface.   The string is basically
+// an approximation to the lat/lon coordinate,
+// and the longer the string, the more accurate it
+// will be.   In general, coordinates that are
+// close together will share a string prefix,
+// making these codes very useful for providing
+// very fast proximity searching using only
+// text-based approaches (eg. SQL's "LIKE" operator)
+// ---------------------------------------------------
 
 var VERSION = "0.1";
 var RADIUS_OF_EARTH = 6378100;
