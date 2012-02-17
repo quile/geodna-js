@@ -69,7 +69,7 @@ GeoDNA = {
     decode: function ( geodna, options ) {
         options = options || {};
 
-        var bits = GeoDNA.bounding_box( geodna );
+        var bits = GeoDNA.boundingBox( geodna );
         var lati = bits[0];
         var loni = bits[1];
 
@@ -84,7 +84,7 @@ GeoDNA = {
 
 
     // locates the min/max lat/lons around the geo_dna
-    bounding_box: function ( geodna ) {
+    boundingBox: function ( geodna ) {
         var chars = geodna.split(new RegExp(''));
 
         var loni;
@@ -116,7 +116,7 @@ GeoDNA = {
     },
 
 
-    add_vector: function ( lat, lon, dy, dx ) {
+    addVector: function ( lat, lon, dy, dx ) {
         return [
             ( ( lat + 90.0 + dy ) % 180.0 ) - 90.0,
             ( ( lon + 180.0 + dx ) % 360.0 ) - 180.0
@@ -130,7 +130,7 @@ GeoDNA = {
         var lat = bits[0];
         var lon = bits[1];
 
-        bits = GeoDNA.bounding_box( geodna );
+        bits = GeoDNA.boundingBox( geodna );
         var lati = bits[0];
         var loni = bits[1];
 
@@ -141,7 +141,7 @@ GeoDNA = {
         for (var i = -1; i <= 1; i++ ) {
             for ( var j = -1; j <= 1; j++ ) {
                 if ( i || j ) {
-                    var bits = GeoDNA.add_vector ( lat, lon, height * i, width * j );
+                    var bits = GeoDNA.addVector ( lat, lon, height * i, width * j );
                     neighbours[neighbours.length] = GeoDNA.encode( bits[0], bits[1] );
                 }
             }

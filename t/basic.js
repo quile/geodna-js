@@ -37,7 +37,7 @@ if ( geo != 'watttatcttttgctacgaagt' ) {
     throw "Encoded successfully";
 }
 
-var bits = GeoDNA.add_vector( -41.288889, 174.777222, 10.0, 10.0 );
+var bits = GeoDNA.addVector( -41.288889, 174.777222, 10.0, 10.0 );
 if ( !value_is_near( bits[0], -31.288889 ) ) {
     throw "New latitude is good";
 }
