@@ -13,7 +13,7 @@
 // text-based approaches (eg. SQL's "LIKE" operator)
 // ---------------------------------------------------
 
-var VERSION = "0.1";
+var VERSION = "0.2";
 var RADIUS_OF_EARTH = 6378100;
 var ALPHABET = [ "g", "a", "t", "c", ];
 var DECODE_MAP = {
@@ -29,6 +29,10 @@ function _deg2rad ( degrees ) {
 
 function _rad2deg ( radians ) {
     return radians * ( 180 / Math.PI );
+}
+
+function _mod ( x, m) {
+    return ( x % m + m ) % m;
 }
 
 GeoDNA = {
@@ -91,7 +95,7 @@ GeoDNA = {
         var loni = bits[1];
 
         var lat = ( lati[0] + lati[1] ) / 2.0;
-        var lon = ( loni[0] + loni[0] ) / 2.0;
+        var lon = ( loni[0] + loni[1] ) / 2.0;
 
         if ( options['radians'] ) {
             return ( _deg2rad( lat ), _deg2rad( lon ) );
@@ -101,7 +105,7 @@ GeoDNA = {
 
 
     // locates the min/max lat/lons around the geo_dna
-    boundingBox: function ( geodna ) {
+    boundingBox: function ( geodna, size ) {
         var chars = geodna.split(new RegExp(''));
 
         var loni;
@@ -132,24 +136,21 @@ GeoDNA = {
         return [ lati, loni ];
     },
 
-
     addVector: function ( lat, lon, dy, dx ) {
         return [
-            ( ( lat + 90.0 + dy ) % 180.0 ) - 90.0,
-            ( ( lon + 180.0 + dx ) % 360.0 ) - 180.0
+            _mod(( lat + 90.0 + dy ), 180.0 ) - 90.0,
+            _mod(( lon + 180.0 + dx ), 360.0 ) - 180.0
         ];
     },
 
     normalise: function( lat, lon ) {
         return [
-            ( ( lat + 90.0 ) % 180.0 ) - 90.0,
-            ( ( lon + 180.0 ) % 360.0 ) - 180.0
+            _mod(( lat + 90.0 ), 180.0 ) - 90.0,
+            _mod(( lon + 180.0 ), 360.0 ) - 180.0,
         ];
     },
 
     neighbours: function ( geodna ) {
-        // TODO:kd - this can be optimised
-
         var bits = GeoDNA.decode( geodna );
         var lat = bits[0];
         var lon = bits[1];
@@ -163,11 +164,11 @@ GeoDNA = {
         var neighbours = [];
 
         for (var i = -1; i <= 1; i++ ) {
-            for ( var j = 0; j <= 2; j++ ) {
-                //if ( i || j ) {
+            for ( var j = -1; j <= 1; j++ ) {
+                if ( i || j ) {
                     var bits = GeoDNA.addVector ( lat, lon, height * i, width * j );
                     neighbours[neighbours.length] = GeoDNA.encode( bits[0], bits[1], { precision: geodna.length } );
-                //}
+                }
             }
         }
         return neighbours;
