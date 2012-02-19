@@ -45,6 +45,10 @@ GeoDNA = {
             longitude = _rad2deg( longitude );
         }
 
+        var bits = GeoDNA.normalise( latitude, longitude );
+        latitude = bits[0];
+        longitude = bits[1];
+
         if ( longitude < 0 ) {
             geodna = geodna + 'w';
             loni = [ -180.0, 0.0 ];
@@ -117,7 +121,7 @@ GeoDNA = {
             if ( cd & 2 ) {
                 loni = [ ( loni[0] + loni[1] ) / 2.0, loni[1] ];
             } else {
-                loni = [ loni[0],  ( loni[0] + loni[1] ) / 2 ];
+                loni = [ loni[0],  ( loni[0] + loni[1] ) / 2.0 ];
             }
             if ( cd & 1 ) {
                 lati = [ ( lati[0] + lati[1] ) / 2.0, lati[1] ];
@@ -133,6 +137,13 @@ GeoDNA = {
         return [
             ( ( lat + 90.0 + dy ) % 180.0 ) - 90.0,
             ( ( lon + 180.0 + dx ) % 360.0 ) - 180.0
+        ];
+    },
+
+    normalise: function( lat, lon ) {
+        return [
+            ( ( lat + 90.0 ) % 180.0 ) - 90.0,
+            ( ( lon + 180.0 ) % 360.0 ) - 180.0
         ];
     },
 
@@ -152,11 +163,11 @@ GeoDNA = {
         var neighbours = [];
 
         for (var i = -1; i <= 1; i++ ) {
-            for ( var j = -1; j <= 1; j++ ) {
-                if ( i || j ) {
+            for ( var j = 0; j <= 2; j++ ) {
+                //if ( i || j ) {
                     var bits = GeoDNA.addVector ( lat, lon, height * i, width * j );
-                    neighbours[neighbours.length] = GeoDNA.encode( bits[0], bits[1] );
-                }
+                    neighbours[neighbours.length] = GeoDNA.encode( bits[0], bits[1], { precision: geodna.length } );
+                //}
             }
         }
         return neighbours;
