@@ -160,5 +160,32 @@ GeoDNA = {
             }
         }
         return neighbours;
-    }
+    },
+
+    // Google Maps support functions
+
+    encodeGoogleLatLng: function( latlng, options ) {
+        var lat = latlng.lat();
+        var lon = latlng.lng();
+        return GeoDNA.encode( lat, lon, options );
+    },
+
+    decodeGoogleLatLng: function( geodna ) {
+        var bits = GeoDNA.decode( geodna );
+        return new google.maps.LatLng( bits[0], bits[1] );
+    },
+
+    boundingBoxPolygon: function( geodna, options ) {
+        var bbox = GeoDNA.boundingBox( geodna );
+        var vertices = [
+            new google.maps.LatLng( bbox[0][0], bbox[1][0] ),
+            new google.maps.LatLng( bbox[0][0], bbox[1][1] ),
+            new google.maps.LatLng( bbox[0][1], bbox[1][1] ),
+            new google.maps.LatLng( bbox[0][1], bbox[1][0] )
+        ];
+
+        options['paths'] = vertices;
+        return new google.maps.Polygon( options );
+    },
+
 };
