@@ -87,7 +87,7 @@ DESCRIPTION
     The precision (ie. string length) of the GeoDNA codes will be the same
     as code.
 
-    GeoDNA.bounding_box
+    GeoDNA.boundingBox
      var coords = GeoDNA.boundingBox( code );
 
     This returns an array containing two arrays:
