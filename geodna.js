@@ -200,4 +200,19 @@ GeoDNA = {
         return new google.maps.Polygon( options );
     },
 
+    map: function( geodna, element, options ) {
+        options = options || {};
+        var mapOptions = {
+            center: GeoDNA.decodeGoogleLatLng( geodna ),
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        for (var key in options) {
+            mapOptions[key] = options[key];
+        }
+
+        var map = new google.maps.Map(element, mapOptions);
+
+        console.log(map);
+        return map;
+    }
 };
