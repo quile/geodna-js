@@ -212,7 +212,6 @@ GeoDNA = {
 
         var map = new google.maps.Map(element, mapOptions);
 
-        console.log(map);
         return map;
     }
 };
