@@ -136,7 +136,10 @@ GeoDNA = {
         return [ lati, loni ];
     },
 
-    addVector: function ( lat, lon, dy, dx ) {
+    addVector: function ( geodna, dy, dx ) {
+        var bits = GeoDNA.decode( geodna );
+        var lat = bits[0];
+        var lon = bits[1];
         return [
             _mod(( lat + 90.0 + dy ), 180.0 ) - 90.0,
             _mod(( lon + 180.0 + dx ), 360.0 ) - 180.0
@@ -150,12 +153,18 @@ GeoDNA = {
         ];
     },
 
-    neighbours: function ( geodna ) {
-        var bits = GeoDNA.decode( geodna );
-        var lat = bits[0];
-        var lon = bits[1];
 
-        bits = GeoDNA.boundingBox( geodna );
+    distanceInKm: function( ga, gb ) {
+        var a = GeoDNA.decode( ga );
+        var b = GeoDNA.decode( gb );
+        var x = ( _deg2rad(b[1]) - _deg2rad(a[1]) ) * Math.cos( ( _deg2rad(a[0]) + _deg2rad(b[0])) / 2 );
+        var y = ( _deg2rad(b[0]) - _deg2rad(a[0]) );
+        var d = Math.sqrt( x*x + y*y ) * RADIUS_OF_EARTH;
+        return d / 1000;
+    },
+
+    neighbours: function ( geodna ) {
+        var bits = GeoDNA.boundingBox( geodna );
         var lati = bits[0];
         var loni = bits[1];
 
@@ -166,12 +175,24 @@ GeoDNA = {
         for (var i = -1; i <= 1; i++ ) {
             for ( var j = -1; j <= 1; j++ ) {
                 if ( i || j ) {
-                    var bits = GeoDNA.addVector ( lat, lon, height * i, width * j );
+                    var bits = GeoDNA.addVector ( geodna, height * i, width * j );
                     neighbours[neighbours.length] = GeoDNA.encode( bits[0], bits[1], { precision: geodna.length } );
                 }
             }
         }
         return neighbours;
+    },
+
+    neighboursWithinRadius: function ( geodna, radius, precision_delta ) {
+        precision_delta = precision_delta || 4;
+        var starting_precision = geodna.length;
+
+        // start with a dictionary
+        var neighbours = {};
+        var current = geodna;
+        
+        // TBD. 
+
     },
 
     // Google Maps support functions

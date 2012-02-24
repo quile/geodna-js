@@ -1,7 +1,7 @@
 NAME
     GeoDNA - Encode latitude and longitude in a useful string format
     There's an interactive demo of this at
-    http://www.shoffle.com/geodna-js/docs/google-maps.html
+    http://www.geodna.org/docs/google-maps.html
 
 SYNOPSIS
      <script type="text/javascript" src="geodna.js"></script>
