@@ -13,7 +13,7 @@
 // text-based approaches (eg. SQL's "LIKE" operator)
 // ---------------------------------------------------
 
-var VERSION = "0.2";
+var VERSION = "0.3";
 var RADIUS_OF_EARTH = 6378100;
 var ALPHABET = [ "g", "a", "t", "c", ];
 var DECODE_MAP = {
@@ -23,6 +23,7 @@ var DECODE_MAP = {
     c: 3,
 };
 
+// Helper functions used by GeoDNA functions
 function _deg2rad ( degrees ) {
     return degrees * ( Math.PI / 180 );
 }
@@ -98,14 +99,14 @@ GeoDNA = {
         var lon = ( loni[0] + loni[1] ) / 2.0;
 
         if ( options['radians'] ) {
-            return ( _deg2rad( lat ), _deg2rad( lon ) );
+            return [ _deg2rad( lat ), _deg2rad( lon ) ];
         }
         return [ lat, lon ];
     },
 
 
     // locates the min/max lat/lons around the geo_dna
-    boundingBox: function ( geodna, size ) {
+    boundingBox: function ( geodna ) {
         var chars = geodna.split(new RegExp(''));
 
         var loni;
@@ -153,10 +154,30 @@ GeoDNA = {
         ];
     },
 
+    pointFromPointBearingAndDistance: function ( geodna, bearing, distance, options ) {
+        options   = options || {};
+        var distance = distance * 1000; // make it metres instead of kilometres
+        var precision = options['precision'] || geodna.length;
+        var bits = GeoDNA.decode( geodna, { radians: true } );
+        var lat1 = bits[0];
+        var lon1 = bits[1];
+        var lat2 = Math.asin( Math.sin( lat1 ) * Math.cos( distance / RADIUS_OF_EARTH ) +
+                              Math.cos( lat1 ) * Math.sin( distance / RADIUS_OF_EARTH ) * Math.cos( bearing ) );
+        var lon2 = lon1 + Math.atan2( Math.sin( bearing ) * Math.sin( distance / RADIUS_OF_EARTH ) * Math.cos( lat1 ),
+                          Math.cos( distance / RADIUS_OF_EARTH ) - Math.sin( lat1 ) * Math.sin( lat2 ));
+        return GeoDNA.encode( lat2, lon2, { precision: precision, radians: true } );
+    },
 
     distanceInKm: function( ga, gb ) {
         var a = GeoDNA.decode( ga );
         var b = GeoDNA.decode( gb );
+
+        // if a[1] and b[1] have different signs, we need to translate
+        // everything a bit in order for the formulae to work.
+        if ( Math.abs( a[1] + b[1] ) < Math.abs( a[1] ) ) {
+            a = GeoDNA.addVector( ga, 0.0, 180.0 );
+            b = GeoDNA.addVector( gb, 0.0, 180.0 );
+        }
         var x = ( _deg2rad(b[1]) - _deg2rad(a[1]) ) * Math.cos( ( _deg2rad(a[0]) + _deg2rad(b[0])) / 2 );
         var y = ( _deg2rad(b[0]) - _deg2rad(a[0]) );
         var d = Math.sqrt( x*x + y*y ) * RADIUS_OF_EARTH;
@@ -167,7 +188,6 @@ GeoDNA = {
         var bits = GeoDNA.boundingBox( geodna );
         var lati = bits[0];
         var loni = bits[1];
-
         var width  = Math.abs( loni[1] - loni[0] );
         var height = Math.abs( lati[1] - lati[0] );
         var neighbours = [];
@@ -183,21 +203,91 @@ GeoDNA = {
         return neighbours;
     },
 
-    neighboursWithinRadius: function ( geodna, radius, precision_delta ) {
-        precision_delta = precision_delta || 4;
-        var starting_precision = geodna.length;
+    // experimental!!
+    // Totally unoptimised
+    neighboursWithinRadius: function ( geodna, radius, options) {
+        options = options || {};
+        options.precision = options['precision'] || 12;
 
-        // start with a dictionary
-        var neighbours = {};
-        var current = geodna;
-        
-        // TBD. 
+        console.log( GeoDNA.decode( geodna ) );
+        var neighbours = [];
+        var rh = radius * Math.SQRT2;
 
+        var start = GeoDNA.pointFromPointBearingAndDistance( geodna, -( Math.PI / 4 ), rh, options );
+        var   end = GeoDNA.pointFromPointBearingAndDistance( geodna, Math.PI / 4, rh, options );
+        var bbox = GeoDNA.boundingBox( start );
+        var bits = GeoDNA.decode( start );
+        var slon = bits[1];
+        bits = GeoDNA.decode( end );
+        var elon = bits[1];
+        var dheight = Math.abs( bbox[0][1] - bbox[0][0] );
+        var dwidth  = Math.abs( bbox[1][1] - bbox[1][0] );
+        var n = GeoDNA.normalise( 0.0, Math.abs( elon - slon ) );
+        var delta = Math.abs(n[1]);
+        var tlat = 0.0;
+        var tlon = 0.0;
+        var current = start;
+
+        while ( tlat <= delta ) {
+            while ( tlon <= delta ) {
+                var cbits = GeoDNA.addVector( current, 0.0, dwidth );
+                current = GeoDNA.encode( cbits[0], cbits[1], options );
+                var d = GeoDNA.distanceInKm( current, geodna );
+                if ( d <= radius ) {
+                    neighbours[neighbours.length] = current;
+                }
+                tlon = tlon + dwidth;
+            }
+
+            tlat = tlat + dheight;
+            var bits = GeoDNA.addVector( start, -tlat , 0.0 );
+            current = GeoDNA.encode( bits[0], bits[1], options );
+            tlon = 0.0;
+        }
+        return neighbours;
+    },
+
+    // this takes an array of GeoDNA codes and reduces it to its
+    // minimal set of codes covering the same area.
+    // Needs a more optimal impl.
+    reduce: function( geodna_codes ) {
+        // hash all the codes
+        var codes = {};
+        for (var i = 0; i < geodna_codes.length; i++ ) {
+            codes[ geodna_codes[i] ] = 1;
+        }
+
+        var reduced = [];
+        var code;
+        for (var i = 0; i < geodna_codes.length; i++ ) {
+            code = geodna_codes[i];
+            if ( codes[ code ] ) {
+                var parent = code.substr( 0, code.length - 1 );
+
+                if ( codes [ parent + 'a' ]
+                  && codes [ parent + 't' ]
+                  && codes [ parent + 'g' ]
+                  && codes [ parent + 'c' ]) {
+                      codes[ parent + 'a' ] = null;
+                      codes[ parent + 't' ] = null;
+                      codes[ parent + 'g' ] = null;
+                      codes[ parent + 'c' ] = null;
+                      reduced.push( parent );
+                } else {
+                    reduced.push( code );
+                }
+            }
+        }
+        if ( geodna_codes.length == reduced.length ) {
+            return reduced;
+        }
+        return GeoDNA.reduce( reduced );
     },
 
     // Google Maps support functions
 
     encodeGoogleLatLng: function( latlng, options ) {
+        options = options || {};
         var lat = latlng.lat();
         var lon = latlng.lng();
         return GeoDNA.encode( lat, lon, options );
@@ -209,6 +299,7 @@ GeoDNA = {
     },
 
     boundingBoxPolygon: function( geodna, options ) {
+        options = options || {};
         var bbox = GeoDNA.boundingBox( geodna );
         var vertices = [
             new google.maps.LatLng( bbox[0][0], bbox[1][0] ),

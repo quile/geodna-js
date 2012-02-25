@@ -32,3 +32,5 @@ ok ( value_is_near( bits[1], -175.222777 ), "New longitude is good" );
 
 var neighbours = GeoDNA.neighbours( 'etctttagatag' );
 ok ( neighbours && neighbours.length == 8, "Got back correct neighbours" );
+
+document.write("All tests passed");
