@@ -209,7 +209,6 @@ GeoDNA = {
         options = options || {};
         options.precision = options['precision'] || 12;
 
-        console.log( GeoDNA.decode( geodna ) );
         var neighbours = [];
         var rh = radius * Math.SQRT2;
 
