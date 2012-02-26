@@ -12,6 +12,8 @@
 // very fast proximity searching using only
 // text-based approaches (eg. SQL's "LIKE" operator)
 // ---------------------------------------------------
+// http://www.geodna.org
+// ---------------------------------------------------
 
 var VERSION = "0.3";
 var RADIUS_OF_EARTH = 6378100;
@@ -174,7 +176,7 @@ GeoDNA = {
 
         // if a[1] and b[1] have different signs, we need to translate
         // everything a bit in order for the formulae to work.
-        if ( Math.abs( a[1] + b[1] ) < Math.abs( a[1] ) ) {
+        if ( a[1] * b[1] < 0.0 && Math.abs( a[1] - b[1] ) > 180.0 ) {
             a = GeoDNA.addVector( ga, 0.0, 180.0 );
             b = GeoDNA.addVector( gb, 0.0, 180.0 );
         }
@@ -203,8 +205,8 @@ GeoDNA = {
         return neighbours;
     },
 
-    // experimental!!
-    // Totally unoptimised
+    // This is experimental!!
+    // Totally unoptimised - use at your peril!
     neighboursWithinRadius: function ( geodna, radius, options) {
         options = options || {};
         options.precision = options['precision'] || 12;
@@ -246,7 +248,7 @@ GeoDNA = {
         return neighbours;
     },
 
-    // this takes an array of GeoDNA codes and reduces it to its
+    // This takes an array of GeoDNA codes and reduces it to its
     // minimal set of codes covering the same area.
     // Needs a more optimal impl.
     reduce: function( geodna_codes ) {
@@ -283,7 +285,9 @@ GeoDNA = {
         return GeoDNA.reduce( reduced );
     },
 
+    // ********************************
     // Google Maps support functions
+    // ********************************
 
     encodeGoogleLatLng: function( latlng, options ) {
         options = options || {};

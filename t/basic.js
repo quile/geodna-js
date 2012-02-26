@@ -1,3 +1,6 @@
+// Yes, I know there are unit-testing frameworks for JS. :)
+// I just didn't want any outside dependencies for this
+// project at all.
 function ok( condition, message ) {
     if (!condition) {
         throw "Test failure: " + message;
@@ -32,5 +35,16 @@ ok ( value_is_near( bits[1], -175.222777 ), "New longitude is good" );
 
 var neighbours = GeoDNA.neighbours( 'etctttagatag' );
 ok ( neighbours && neighbours.length == 8, "Got back correct neighbours" );
+
+neighbours = GeoDNA.reduce( GeoDNA.neighboursWithinRadius( nelson, 140.0, { precision: 11 } ) );
+
+var found = false;
+for ( var i = 0; i < neighbours.length && !found; i++ ) {
+    var n = neighbours[i];
+    if ( wellington.indexOf( n ) == 0 ) {
+        found = true;
+    }
+}
+ok( found, "Found Wellington in proximity to Nelson." );
 
 document.write("All tests passed");
