@@ -15,7 +15,7 @@
 // http://www.geodna.org
 // ---------------------------------------------------
 
-var VERSION = "0.3";
+var VERSION = "0.4";
 var RADIUS_OF_EARTH = 6378100;
 var ALPHABET = [ "g", "a", "t", "c", ];
 var DECODE_MAP = {

@@ -15,7 +15,7 @@ SYNOPSIS
      > -41.288889, 174.777222
 
 VERSION
-        0.01
+        0.04
 
 FEATURES
     * Simple API
@@ -50,12 +50,12 @@ DESCRIPTION
     This uses a concept that is very similar to Gustavo Niemeyer's geohash
     system ( http://geohash.org ), but encodes the latitude and longitude in
     a way that is more conducive to stem-based searching (which is probably
-    the a common use of these hashing systems).
+    the most common use of these hashing systems).
 
   FUNCTIONS
 
     GeoDNA.encode
-      var code = GeoDNA.encode( latitude, longitude, options);
+      var code = GeoDNA.encode( latitude, longitude, options );
 
     Returns a GeoDNA code (which is a string) for latitude, longitude.
     Possible options are:
@@ -67,6 +67,7 @@ DESCRIPTION
         number of characters in the GeoDNA code. Note that any more than
         22 chars and you're kinda splitting hairs.
 
+
     GeoDNA.decode
      var coords = GeoDNA.decode( code, options )
 
@@ -74,6 +75,7 @@ DESCRIPTION
 
     radians : true/false
         If true, the values returned will be in radians.
+
 
     GeoDNA.neighbours
      var neighbours = GeoDNA.neighbours( code );
@@ -86,6 +88,33 @@ DESCRIPTION
 
     The precision (ie. string length) of the GeoDNA codes will be the same
     as code.
+
+
+    GeoDNA.neighboursWithinRadius
+     var neighbours = GeoDNA.neighboursWithinRadius( code, radius, options );
+
+    Returns a raw list of GeoDNA codes of a certain size contained within the
+    radius (specified in kilometres) about the point represented by a
+    code.
+
+    The size of the returned codes will either be specified in options, or
+    will be the default (11).
+
+    precision: N
+        If this is present, the returned GeoDNA codes will have this size.
+
+
+    GeoDNA.reduce
+     var neighbours = GeoDNA.reduce( neighbours )
+
+    Given an array of GeoDNA codes of arbitrary size (eg. as returned by
+    the "neighboursWithinRadius" function), this will return the minimal set
+    of GeoDNA codes (of any sizes) that exactly cover the same area.  This is
+    important because it can massively reduce the number of comparisons you
+    have to do in order to perform stem-matching, *and* more crucially, if
+    you *don't* reduce the list, you *can't* perform stem matching.
+
+
 
     GeoDNA.boundingBox
      var coords = GeoDNA.boundingBox( code );
